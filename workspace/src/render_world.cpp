@@ -26,7 +26,7 @@ Render_World::~Render_World()
 // Any intersection with t<=small_t should be ignored.
 Object* Render_World::Closest_Intersection(const Ray& ray,Hit& hit)
 {
-	Object* closestObj = NULL;
+	Object* closestObj = nullptr;
 	double minT = std::numeric_limits<double>::max();
 	for(Object* var : objects)
 	{
@@ -48,8 +48,8 @@ void Render_World::Render_Pixel(const ivec2& pixel_index)
 {
     Ray ray;
 	ray.endpoint = camera.position;
-	ray.direction = (camera.position - camera.World_Position(pixel_index)).normalized();
-    vec3 color=Cast_Ray(ray,0);
+	ray.direction = (camera.World_Position(pixel_index) - camera.position).normalized();
+    vec3 color=Cast_Ray(ray, 0);
     camera.Set_Pixel(pixel_index,Pixel_Color(color));
 }
 
@@ -66,19 +66,20 @@ vec3 Render_World::Cast_Ray(const Ray& ray,int recursion_depth)
 {
 	int rd = recursion_depth;
 	Hit objHit;
-	objHit.object	   = NULL;
+	objHit.object	   = nullptr;
 	objHit.t		   = 0;
 	objHit.ray_exiting = false;
 	Object* obj = Closest_Intersection(ray, objHit);
     vec3 color;
 	//If there is an Obj for the ray
-	if (obj != NULL) {
+	if (obj != nullptr) {
 		vec3 point = ray.Point(objHit.t);
 		vec3 normal = obj->Normal(point);
 		if (objHit.ray_exiting) {
 			normal *= -1;
 		}
-		color = obj->material_shader->Shade_Surface(ray,
+		color = obj->material_shader->Shade_Surface(
+			ray,
 			point,
 			normal,
 			rd,
@@ -87,7 +88,12 @@ vec3 Render_World::Cast_Ray(const Ray& ray,int recursion_depth)
 	//If there is no Obj, use the background
 	else {
 		vec3 dummy;
-		color = background_shader->Shade_Surface(ray, dummy, dummy, rd, false);
+		color = background_shader->Shade_Surface(
+			ray, 
+			ray.endpoint, 
+			ray.direction, 
+			rd, 
+			false);
 	}
 	rd++;
     return color;

@@ -7,13 +7,15 @@ bool Sphere::Intersection(const Ray& ray, std::vector<Hit>& hits) const
 {
 	vec3 u = ray.direction;
 	vec3 p = ray.endpoint - center;
-	double deltaPrime = pow(dot(u, p),2) - p.magnitude_squared() + pow(radius,2);
+	double deltaPrime = 
+	pow(dot(u, p),2) 
+	- (p.magnitude_squared() - pow(radius,2));
 	
 	//Postive Delta prime means a hit
 	if (deltaPrime > 0) {
-		double b  = (2 * dot(u, p));
-		double t1 = b - sqrt(deltaPrime);
-		double t2 = b + sqrt(deltaPrime);
+		double b  = (- 1 * dot(u, p));
+		double t1 = (b - sqrt(deltaPrime));
+		double t2 = (b + sqrt(deltaPrime));
 		Hit hit2;
 		hit2.object      = this;
 		hit2.t           = t2;
@@ -36,8 +38,6 @@ bool Sphere::Intersection(const Ray& ray, std::vector<Hit>& hits) const
 vec3 Sphere::Normal(const vec3& point) const
 {
     vec3 normal;
-	normal = point - center;
-	normal *= -1;
-	normal.normalized();
+	normal = (point - center).normalized();
     return normal;
 }
