@@ -64,7 +64,6 @@ void Render_World::Render()
 // or the background color if there is no object intersection
 vec3 Render_World::Cast_Ray(const Ray& ray,int recursion_depth)
 {
-	int rd = recursion_depth;
 	Hit objHit;
 	objHit.object	   = nullptr;
 	objHit.t		   = 0;
@@ -72,7 +71,7 @@ vec3 Render_World::Cast_Ray(const Ray& ray,int recursion_depth)
 	Object* obj = Closest_Intersection(ray, objHit);
     vec3 color;
 	//If there is an Obj for the ray
-	if (obj != nullptr) {
+	if (obj != nullptr && recursion_depth < recursion_depth_limit) {
 		vec3 point = ray.Point(objHit.t);
 		vec3 normal = obj->Normal(point);
 		if (objHit.ray_exiting) {
@@ -82,7 +81,7 @@ vec3 Render_World::Cast_Ray(const Ray& ray,int recursion_depth)
 			ray,
 			point,
 			normal,
-			rd,
+			recursion_depth,
 			objHit.ray_exiting);
 	}
 	//If there is no Obj, use the background
@@ -92,9 +91,8 @@ vec3 Render_World::Cast_Ray(const Ray& ray,int recursion_depth)
 			ray, 
 			ray.endpoint, 
 			ray.direction, 
-			rd, 
+			recursion_depth, 
 			false);
 	}
-	rd++;
     return color;
 }

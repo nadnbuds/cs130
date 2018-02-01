@@ -10,32 +10,48 @@ Shade_Surface(const Ray& ray, const vec3& intersection_point,
     //       Use is_exiting to decide the refractive indices on the ray and transmission sides
     vec3 reflection_color;
     vec3 refraction_color;
+    
     double reflectance_ratio=-1;
+
     if(!world.disable_fresnel_refraction)
     {
-        //TODO (Test 27+): Compute the refraction_color:
-        // - Check if it is total internal reflection. 
-        //      If so update the reflectance_ratio for total internal refraction
-        //
-        //      else, follow the instructions below
-        //
-        //        (Test 28+): Update the reflectance_ratio 
-        //
-        //        (Test 27+): Cast the refraction ray and compute the refraction_color
-        //
+        double cosR;
+        double cosI;
+        double nR = refractive_index;
+        double nI = REFRACTIVE_INDICES::AIR;
+        if(is_exiting){
+            nR = nI;
+            nI = refractive_index;
+        }
+
+        vec3 r = (ray.direction - dot(ray.direction, same_side_normal) * same_side_normal);
+        cosI = dot(-1.0 * ray.direction, same_side_normal);
+        reflectance_ratio = 1;
+        cosR = 1.0 - pow(nI/nR, 2) * (1.0 - pow(cosI, 2));
+        if(cosR >= 0){
+            cosR = sqrt(cosR);
+            Ray refraction;
+            refraction.endpoint = intersection_point;
+            refraction.direction = (nI/nR) * r - (cosR * same_side_normal);
+            refraction.direction = refraction.direction.normalized();
+            refraction_color = world.Cast_Ray(refraction, recursion_depth + 1);
+
+            double rPar = pow((nR * cosI - nI * cosR)/(nR * cosI + nI * cosR), 2);
+            double rPer = pow((nI * cosI - nR * cosR)/(nI * cosI + nR * cosR), 2);
+            reflectance_ratio = (rPar + rPer)/2.0;
+        }
     }
 
     if(!world.disable_fresnel_reflection){
-        //TODO:(Test 26+): Compute reflection_color:
-        // - Cast Reflection Ray andd get color
-        //
+        vec3 r = (ray.direction - 2.0 * dot(ray.direction, same_side_normal) * same_side_normal).normalized();
+        Ray reflection;
+        reflection.endpoint = intersection_point;
+        reflection.direction = r;
+        reflection_color = world.Cast_Ray(reflection, recursion_depth + 1);
     }
 
     Enforce_Refractance_Ratio(reflectance_ratio);
-    vec3 color;
-    // TODO: (Test 26+) Compute final 'color' by blending reflection_color and refraction_color using 
-    //                  reflectance_ratio
-    //
+    vec3 color = reflectance_ratio * reflection_color + (1 - reflectance_ratio) * refraction_color;
     return color;
 }
 
